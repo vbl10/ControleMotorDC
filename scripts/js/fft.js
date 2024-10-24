@@ -3,7 +3,8 @@
  *  node fft.js <caminho do arquivo de entrada>
  * 
  * Opções:
- *  --complexo          [amplitude e fase representadas com números complexos]
+ *  --caminho <caminho do arquivo a ser processado>     [obrigatório]
+ *  --complexo                                          [amplitude e fase representadas com números complexos]
  * 
  */
 
