@@ -1,6 +1,6 @@
 /**
  * Uso:
- *  node fft.js <caminho do arquivo de entrada>
+ *  node fft.js
  * 
  * Opções:
  *  --caminho <caminho do arquivo a ser processado>     [obrigatório]
