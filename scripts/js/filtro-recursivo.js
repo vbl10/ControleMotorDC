@@ -1,3 +1,12 @@
+/**
+ * Uso:
+ *  node filtro-recursivo.js <alpha> <caminho do arquivo>
+ * 
+ * Glossário:
+ *  Alpha: intensidade de atenuação do filtro
+*/
+
+
 const fs = require('fs');
 
 const args = process.argv.slice(2);
