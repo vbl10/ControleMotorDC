@@ -39,7 +39,9 @@ fs.readFile(filePath, 'utf8', (err, data) => {
         output.join('\n');
     }
     else {
-        output = 'Amplitude, Fase\n' + output.map(val => `${val.re}, ${val.im}`).join('\n');
+        const amplitude = math.sqrt(val.re * val.re + val.im * val.im);
+        const phase = math.atan2(val.im, val.re);
+        output = 'Amplitude, Fase\n' + output.map(val => `${amplitude}, ${phase}`).join('\n');
     }
 
     const outputFilePath = `${filePath.substring(0, filePath.lastIndexOf('.'))}.fft${filePath.substring(filePath.lastIndexOf('.'))}`;
