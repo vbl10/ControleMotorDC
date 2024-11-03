@@ -1,34 +1,76 @@
 #include <TimerOne.h>
 
-const long nLeituras = 500;
-const long periodoAmostragemUs = 1000L;
-const long atrasoAplicacaoSinalReferenciaUs = 10000L;
+long nLeituras = 500;
+// 0 <= r <= 1
+typedef float (*SinalRefrencia)();
+SinalRefrencia sinalReferencia;
 
-enum SENTIDO { HORARIO, ANTI_HORARIO };
-void definirSentido(SENTIDO sentido) {
-  digitalWrite(3, !sentido);
-  digitalWrite(4, sentido);
+int nLeituraAtual = 0;
+bool estadoBotao = false;
+
+int degrauUnitarioAtrasoEmLeituras = 20;
+float degrauUnitario() {
+  return nLeituraAtual >= degrauUnitarioAtrasoEmLeituras ? 1.0f : 0.0f;
 }
 
-// 0 <= r <= 1
+float testeDeModelo() {
+  if (nLeituraAtual < 20) {
+    return 0.0f;
+  }
+  else if (nLeituraAtual < 60) {
+    return 1.0f;
+  }
+  else if (nLeituraAtual < 100) {
+    return 0.0f;
+  }
+  else if (nLeituraAtual < 120) {
+    return 1.0f;
+  }
+  else {
+    return 0.0f;
+  }
+}
+
+void iniciarTeste(SinalRefrencia _sinalReferencia, int _nLeituras, long periodoAmostragemUs) {
+  nLeituraAtual = 0;
+  sinalReferencia = _sinalReferencia;
+  nLeituras = _nLeituras;
+  
+  Timer1.setPeriod(periodoAmostragemUs);
+  Timer1.start();
+}
 void aplicarSinalReferencia(float r) {
   analogWrite(5, r * 255.f);
 }
+int lerSaidaSistema() {
+  return analogRead(A0);
+}
+void timerOneInterrupt() {
+  if (nLeituraAtual >= nLeituras) {
+    Timer1.stop();
+    aplicarSinalReferencia(0);
+    nLeituraAtual = 0;
+    return;
+  }
+  float r = sinalReferencia();
+  aplicarSinalReferencia(r);
+  
+  float y = lerSaidaSistema();
 
-bool estadoBotao = false;
+  Serial.print(r);
+  Serial.print(", ");
+  Serial.println(y);
+  
+  nLeituraAtual++;
+}
+
 void atualizarEstadoBotao() {
   estadoBotao = !digitalRead(6);
 }
 
-int lerSaidaSistema() {
-  return analogRead(A0);
-}
-
-int nLeituraAtual = 0;
-void imprimirLeitura() {
-  if (nLeituraAtual >= nLeituras) return;
-  Serial.println(lerSaidaSistema());
-  nLeituraAtual++;
+void definirSentido(bool horario) {
+  digitalWrite(3, horario);
+  digitalWrite(4, !horario);
 }
 
 void setup() {
@@ -41,13 +83,15 @@ void setup() {
 
   digitalWrite(2,HIGH);              // Coloca o driver TB6612 em operação
 
-  definirSentido(SENTIDO::HORARIO);
+  definirSentido(true);
 
   Serial.begin(9600);
 
-  Timer1.initialize(periodoAmostragemUs);
+  Timer1.initialize(0);
   Timer1.stop();
-  Timer1.attachInterrupt(imprimirLeitura);
+  Timer1.attachInterrupt(timerOneInterrupt);
+
+  sinalReferencia = degrauUnitario;
 }
 
 
@@ -59,11 +103,5 @@ void loop() {
   }
   while (!estadoBotao);
 
-  nLeituraAtual = 0;
-  Timer1.start(); //começar coleta de amostras
-  delayMicroseconds(atrasoAplicacaoSinalReferenciaUs);
-  aplicarSinalReferencia(1.0f);
-  delayMicroseconds(nLeituras * periodoAmostragemUs - atrasoAplicacaoSinalReferenciaUs);
-  Timer1.stop(); //para coleta de amostras
-  aplicarSinalReferencia(0.0f); //desligar motor
+  iniciarTeste(degrauUnitario, 200, 10000L);
 }
