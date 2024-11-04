@@ -20,21 +20,29 @@ float sinalReferencia()
 }
 
 const float firCoefs[] = {
-    1.0f/8.0f,
-    1.0f/8.0f,
-    1.0f/8.0f,
-    1.0f/8.0f,
-    1.0f/8.0f,
-    1.0f/8.0f,
-    1.0f/8.0f,
-    1.0f/8.0f,
+    -0.0024f,
+    -0.0124f,
+    -0.0225f,
+    -0.0156f,
+     0.0252f,
+     0.1002f,
+     0.1853f,
+     0.2423f,
+     0.2423f,
+     0.1853f,
+     0.1002f,
+     0.0252f,
+    -0.0156f,
+    -0.0225f,
+    -0.0124f,
+    -0.0024f
 };
 FiltroFIR<8> filtro(firCoefs);
 ControladorPID pid(
-    1.384, 
-    33.8766, 
-    -0.0014862, 
-    60.0089,   
+    1.68912455214382, 
+    37.1413004840443, 
+    0.00958003335315876, 
+    95.3609332700817,   
     periodoAmostragem_s
 );
 
@@ -49,8 +57,10 @@ void controlar()
     float y = ((float)analogRead(PIN_TACOGERADOR) - 499.0f) / 188.8f;
     float yf = filtro.atualizar(y);     //y filtrado
     float ef = sinalReferencia() - yf;  //erro filtrado
-    float e = sinalReferencia() - y;    //erro sem filtro (aplicado ao controlador)
-    float c = pid.atualizar(e);
+    //float e = sinalReferencia() - y;    //erro sem filtro (aplicado ao controlador)
+    //float c = pid.atualizar(e);
+    float c = pid.atualizar(ef);
+    
     analogWrite(PIN_TB6612_PWM, c * 255.0f);
 
     Serial.print(y);
